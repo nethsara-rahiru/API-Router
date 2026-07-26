@@ -1,0 +1,896 @@
+AI API GATEWAY IMPLEMENTATION PLAN
+==================================
+
+Project Name:
+AI API Gateway + Key Management Platform
+
+Version:
+Phase 1 Implementation Plan
+
+Technology Stack:
+- Backend: Node.js
+- Database: MongoDB Atlas
+- Frontend: HTML + CSS + JavaScript
+- Hosting: VPS Server
+- Process Manager: PM2
+- Reverse Proxy: Nginx
+
+
+==================================================
+1. SYSTEM OVERVIEW
+==================================================
+
+The system is an OpenAI-compatible AI API Gateway that allows
+developers and organizations to use AI models through a unified API.
+
+The system manages multiple AI provider keys, routes requests
+intelligently, tracks usage, and provides analytics.
+
+Phase 1 provider:
+- Groq
+
+Future providers:
+- OpenAI
+- Gemini
+- Anthropic
+- Other AI providers
+
+
+Core concept:
+
+Developer Application
+        |
+        |
+        | OpenAI Compatible API Request
+        |
+        v
+
+AI API Gateway
+
+        |
+        |
+        | Select best provider key
+        |
+        v
+
+AI Provider API
+(Groq)
+
+        |
+        |
+        v
+
+AI Response
+
+        |
+        |
+        v
+
+Developer Application
+
+
+==================================================
+2. MAIN FEATURES
+==================================================
+
+Authentication:
+- User registration
+- Login system
+- JWT authentication
+- User roles
+- Organization support
+
+
+API Gateway:
+- OpenAI-compatible API
+- Chat completion endpoint
+- Streaming support
+- Request validation
+- Response formatting
+
+
+Provider Management:
+- Add AI providers
+- Enable/disable providers
+- Provider adapters
+
+
+Provider Key Management:
+- Add Groq API keys
+- Encrypt API keys
+- Validate keys
+- Manage key status
+- Key pool management
+
+
+Routing Engine:
+Available strategies:
+
+1. Round Robin
+2. Least Usage
+3. Highest Remaining Capacity
+4. Fastest Response
+5. Lowest Failure Rate
+6. Smart Routing
+
+
+Usage Tracking:
+- Request count
+- Token usage
+- Input tokens
+- Output tokens
+- Response time
+- Error tracking
+
+
+Limits:
+- User limits
+- Organization limits
+- Application limits
+
+
+Analytics:
+- Usage dashboard
+- Request history
+- Provider performance
+- Key performance
+
+
+==================================================
+3. SYSTEM ARCHITECTURE
+==================================================
+
+
+Frontend
+(HTML + CSS + JavaScript)
+
+        |
+        |
+        v
+
+Node.js Backend
+
+        |
+        |
+        +-----------------------+
+        |                       |
+        v                       v
+
+Authentication            API Gateway
+
+        |                       |
+        |                       |
+        v                       v
+
+MongoDB Atlas          Routing Engine
+
+                                |
+                                |
+                                v
+
+                       Provider Manager
+
+                                |
+                                |
+                                v
+
+                            Groq API
+
+                                |
+                                |
+                                v
+
+                      Developer Provider Keys
+
+
+
+==================================================
+4. BACKEND FOLDER STRUCTURE
+==================================================
+
+
+backend/
+
+server.js
+
+config/
+    database.js
+    environment.js
+
+routes/
+
+    auth.routes.js
+    gateway.routes.js
+    provider.routes.js
+    key.routes.js
+    usage.routes.js
+    user.routes.js
+
+
+controllers/
+
+    auth.controller.js
+    gateway.controller.js
+    provider.controller.js
+    key.controller.js
+    usage.controller.js
+
+
+services/
+
+    auth.service.js
+    gateway.service.js
+    routing.service.js
+    provider.service.js
+    key.service.js
+    usage.service.js
+    encryption.service.js
+
+
+providers/
+
+    groq/
+
+        groq.adapter.js
+
+
+middleware/
+
+    auth.middleware.js
+    rateLimit.middleware.js
+    error.middleware.js
+
+
+models/
+
+    User.js
+    Organization.js
+    APIKey.js
+    Provider.js
+    ProviderKey.js
+    UsageLog.js
+    Application.js
+
+
+utils/
+
+    logger.js
+    validators.js
+
+
+
+==================================================
+5. DATABASE DESIGN
+==================================================
+
+
+MongoDB Atlas Collections:
+
+
+USERS
+
+Fields:
+
+id
+name
+email
+passwordHash
+role
+organizationId
+status
+createdAt
+
+
+--------------------------------------------------
+
+
+ORGANIZATIONS
+
+Fields:
+
+id
+name
+ownerId
+members
+limits
+createdAt
+
+
+--------------------------------------------------
+
+
+API_KEYS
+
+Developer API keys.
+
+Fields:
+
+id
+keyHash
+name
+userId
+organizationId
+status
+createdAt
+
+
+Example:
+
+apr_live_xxxxxxxxx
+
+
+--------------------------------------------------
+
+
+PROVIDERS
+
+Stores AI providers.
+
+Fields:
+
+id
+name
+code
+status
+
+
+Example:
+
+{
+ name: "Groq",
+ code: "groq",
+ status: "enabled"
+}
+
+
+--------------------------------------------------
+
+
+PROVIDER_KEYS
+
+Stores encrypted provider keys.
+
+Fields:
+
+id
+provider
+encryptedKey
+ownerId
+organizationId
+status
+validationStatus
+createdAt
+
+
+Example:
+
+{
+ provider:"groq",
+ encryptedKey:"encrypted_value",
+ status:"active"
+}
+
+
+
+--------------------------------------------------
+
+
+APPLICATIONS
+
+Tracks developer applications.
+
+Fields:
+
+id
+name
+ownerId
+apiKeyId
+createdAt
+
+
+--------------------------------------------------
+
+
+USAGE_LOGS
+
+Stores API usage.
+
+Fields:
+
+id
+userId
+organizationId
+applicationId
+provider
+model
+inputTokens
+outputTokens
+totalTokens
+responseTime
+status
+timestamp
+
+
+
+--------------------------------------------------
+
+
+AUDIT_LOGS
+
+Tracks important actions.
+
+Fields:
+
+id
+userId
+action
+details
+timestamp
+
+
+
+==================================================
+6. API DESIGN
+==================================================
+
+
+Base URL:
+
+https://api.yourdomain.com/v1
+
+
+--------------------------------------------------
+
+CHAT COMPLETION
+
+
+Endpoint:
+
+POST /v1/chat/completions
+
+
+Headers:
+
+
+Authorization:
+
+Bearer apr_xxxxxxxxx
+
+
+Request:
+
+
+{
+ "model":"llama-3.3-70b-versatile",
+
+ "messages":[
+    {
+      "role":"user",
+      "content":"Hello"
+    }
+ ],
+
+ "stream":false
+}
+
+
+
+Gateway Process:
+
+
+1. Validate API key
+
+2. Identify user
+
+3. Check limits
+
+4. Select provider key
+
+5. Forward request to Groq
+
+6. Receive response
+
+7. Record usage
+
+8. Return response
+
+
+
+==================================================
+7. ROUTING ENGINE
+==================================================
+
+
+The routing engine selects the best provider key.
+
+
+Supported strategies:
+
+
+ROUND ROBIN
+
+Example:
+
+Key A
+Key B
+Key C
+
+Rotation order.
+
+
+
+--------------------------------------------------
+
+
+LEAST USAGE
+
+Select key with lowest usage.
+
+
+
+--------------------------------------------------
+
+
+HIGHEST CAPACITY
+
+Select key with highest remaining capacity.
+
+
+
+--------------------------------------------------
+
+
+FASTEST RESPONSE
+
+Select key/provider with lowest latency.
+
+
+
+--------------------------------------------------
+
+
+LOWEST FAILURE RATE
+
+Select most reliable key.
+
+
+
+--------------------------------------------------
+
+
+SMART ROUTING
+
+Combines:
+
+- Usage
+- Latency
+- Failures
+- Availability
+
+
+
+==================================================
+8. PROVIDER KEY MANAGEMENT
+==================================================
+
+
+Developer can:
+
+- Add provider keys
+- Remove keys
+- Disable keys
+- View key status
+
+
+Key addition:
+
+
+Developer enters:
+
+Provider:
+Groq
+
+
+API Key:
+
+gsk_xxxxxxxxx
+
+
+System:
+
+1. Validate key
+
+2. Encrypt key
+
+3. Store in MongoDB
+
+
+Key storage:
+
+Never store plain API keys.
+
+
+
+==================================================
+9. SECURITY DESIGN
+==================================================
+
+
+Password Security:
+
+- bcrypt/argon2 hashing
+
+
+API Key Security:
+
+- Hash developer API keys
+- Encrypt provider keys
+- Store encryption secret in VPS environment variables
+
+
+Environment:
+
+.env
+
+
+Example:
+
+
+DATABASE_URL=
+JWT_SECRET=
+ENCRYPTION_SECRET=
+
+
+
+Security:
+
+- HTTPS only
+- Rate limiting
+- Input validation
+- Request logging
+- Permission checks
+
+
+
+==================================================
+10. FRONTEND DASHBOARD
+==================================================
+
+
+Pages:
+
+
+Dashboard
+
+- Requests today
+- Token usage
+- Active providers
+- Errors
+
+
+
+API Keys
+
+- Create API key
+- Disable key
+- View keys
+
+
+
+Provider Keys
+
+- Add Groq key
+- View status
+- Remove key
+
+
+
+Usage Analytics
+
+- Token usage
+- Request history
+- Charts
+
+
+
+Routing Settings
+
+- Select routing strategy
+
+
+
+Users
+
+- Team members
+- Roles
+
+
+
+==================================================
+11. DEVELOPMENT PHASES
+==================================================
+
+
+PHASE 1:
+Project Setup
+
+Tasks:
+
+- Create Node.js project
+- Setup MongoDB Atlas
+- Setup folder structure
+- Setup environment variables
+
+
+
+--------------------------------------------------
+
+
+PHASE 2:
+Authentication
+
+Tasks:
+
+- Register
+- Login
+- JWT
+- User roles
+
+
+
+--------------------------------------------------
+
+
+PHASE 3:
+Provider Management
+
+Tasks:
+
+- Provider model
+- Groq adapter
+- Add Groq keys
+- Encryption
+- Validation
+
+
+
+--------------------------------------------------
+
+
+PHASE 4:
+API Gateway
+
+Tasks:
+
+- OpenAI compatible endpoint
+- Request forwarding
+- Response handling
+- Streaming support
+
+
+
+--------------------------------------------------
+
+
+PHASE 5:
+Routing Engine
+
+Tasks:
+
+- Key pool
+- Routing strategies
+- Failover handling
+
+
+
+--------------------------------------------------
+
+
+PHASE 6:
+Usage System
+
+Tasks:
+
+- Token extraction
+- Usage logging
+- Analytics dashboard
+
+
+
+--------------------------------------------------
+
+
+PHASE 7:
+Production Deployment
+
+Tasks:
+
+- VPS setup
+- Nginx configuration
+- SSL
+- PM2 deployment
+- Security testing
+
+
+
+==================================================
+12. VPS DEPLOYMENT
+==================================================
+
+
+Server:
+
+
+VPS
+
+|
+
++ Nginx
+
+|
+
++ Node.js Application
+
+|
+
++ PM2
+
+
+Database:
+
+MongoDB Atlas
+
+
+
+Deployment:
+
+
+1. Upload project
+
+2. Install Node.js
+
+3. Install dependencies
+
+4. Configure environment
+
+5. Start with PM2
+
+6. Configure Nginx
+
+7. Enable HTTPS
+
+
+
+==================================================
+13. FUTURE ROADMAP
+==================================================
+
+
+Future providers:
+
+- OpenAI
+- Gemini
+- Anthropic
+
+
+Future APIs:
+
+- Embeddings
+- Image generation
+- Audio
+
+
+Future features:
+
+- Billing system
+- Cost optimization
+- Enterprise teams
+- Advanced permissions
+- Provider marketplace
+- AI model comparison
+
+
+
+==================================================
+END OF DOCUMENT
+==================================================
